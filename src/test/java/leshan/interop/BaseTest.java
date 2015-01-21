@@ -17,7 +17,7 @@ public class BaseTest {
     protected String clientEndpoint;
 
     @Before
-    public void init() {
+    public void start() {
         // start the server
         LeshanServerBuilder serverBuilder = new LeshanServerBuilder();
         server = serverBuilder.build();

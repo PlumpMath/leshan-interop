@@ -16,9 +16,23 @@ import leshan.client.resource.string.StringLwM2mExchange;
 import leshan.client.resource.string.StringLwM2mResource;
 import leshan.server.californium.LeshanServerBuilder;
 
+import org.eclipse.californium.core.CoapServer;
+import org.eclipse.californium.core.network.CoAPEndpoint;
+import org.eclipse.californium.core.network.Endpoint;
+import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.scandium.DTLSConnector;
+import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
+import org.eclipse.californium.scandium.dtls.pskstore.PskStore;
+
 public class TestClientBuilder {
 
+    private final InetSocketAddress clientAddress = new InetSocketAddress(0);
+
+    private CoapServer localCoapServer = new CoapServer();
+
     private Map<Integer, LwM2mClientObjectDefinition> objectDefs = new HashMap<Integer, LwM2mClientObjectDefinition>();
+
+    private int serverPort = LeshanServerBuilder.PORT;
 
     public void addServerObject() {
         if (!objectDefs.containsKey(1)) {
@@ -34,8 +48,32 @@ public class TestClientBuilder {
         }
     }
 
+    public void setSecure(final String pskIdentity, final byte[] pskSecret) {
+        final DTLSConnector connector = new DTLSConnector(clientAddress);
+        connector.getConfig().setPreferredCipherSuite(CipherSuite.TLS_PSK_WITH_AES_128_CCM_8);
+        connector.getConfig().setPskStore(new PskStore() {
+
+            @Override
+            public String getIdentity(InetSocketAddress inetAddress) {
+                return pskIdentity;
+            }
+
+            @Override
+            public byte[] getKey(String identity) {
+                return pskSecret;
+            }
+
+        });
+
+        final Endpoint secureEndpoint = new CoAPEndpoint(connector, NetworkConfig.getStandard());
+        localCoapServer = new CoapServer();
+        localCoapServer.addEndpoint(secureEndpoint);
+
+        serverPort = LeshanServerBuilder.PORT_DTLS;
+    }
+
     public LeshanClient build() {
-        return new LeshanClient(new InetSocketAddress(0), new InetSocketAddress("localhost", LeshanServerBuilder.PORT),
+        return new LeshanClient(clientAddress, new InetSocketAddress("localhost", serverPort), localCoapServer,
                 objectDefs.values().toArray(new LwM2mClientObjectDefinition[] {}));
     }
 
