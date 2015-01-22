@@ -29,6 +29,7 @@ public class BaseTest {
         TestClientBuilder clientBuilder = new TestClientBuilder();
         clientBuilder.addServerObject();
         clientBuilder.addDeviceObject();
+        clientBuilder.addConnectivityMonitoringObject();
         client = clientBuilder.build();
         client.start();
         System.out.println("Client started");

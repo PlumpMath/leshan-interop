@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import leshan.client.californium.LeshanClient;
 import leshan.client.resource.LwM2mClientObjectDefinition;
@@ -36,15 +37,22 @@ public class TestClientBuilder {
 
     public void addServerObject() {
         if (!objectDefs.containsKey(1)) {
-            LwM2mClientObjectDefinition def = this.buildServerObjectDefinition();
+            LwM2mClientObjectDefinition def = this.buildServerDefinition();
             objectDefs.put(1, def);
         }
     }
 
     public void addDeviceObject() {
         if (!objectDefs.containsKey(3)) {
-            LwM2mClientObjectDefinition def = this.buildDeviceObjectDefinition();
+            LwM2mClientObjectDefinition def = this.buildDeviceDefinition();
             objectDefs.put(3, def);
+        }
+    }
+
+    public void addConnectivityMonitoringObject() {
+        if (!objectDefs.containsKey(4)) {
+            LwM2mClientObjectDefinition def = this.buildConnectivityMonitoringDefinition();
+            objectDefs.put(4, def);
         }
     }
 
@@ -84,7 +92,7 @@ public class TestClientBuilder {
 
     static final int SHORT_SERVER_ID = 1;
 
-    private LwM2mClientObjectDefinition buildServerObjectDefinition() {
+    private LwM2mClientObjectDefinition buildServerDefinition() {
 
         List<LwM2mClientResourceDefinition> rscDefs = new ArrayList<LwM2mClientResourceDefinition>();
 
@@ -101,12 +109,13 @@ public class TestClientBuilder {
     }
 
     // /3 DEVICE
+
     static final String MANUFACTURER_MODEL = "Manufacturer Model Test";
     static final String MODEL_NUMBER = "Model Number Test";
     static final String SERIAL_NUMBER = "TEST0123456789";
     static final String FIRMWARE_VERSION = "1.1";
 
-    private LwM2mClientObjectDefinition buildDeviceObjectDefinition() {
+    private LwM2mClientObjectDefinition buildDeviceDefinition() {
 
         List<LwM2mClientResourceDefinition> rscDefs = new ArrayList<LwM2mClientResourceDefinition>();
 
@@ -143,7 +152,26 @@ public class TestClientBuilder {
         }, true));
 
         return new LwM2mClientObjectDefinition(3, true, true, rscDefs.toArray(new LwM2mClientResourceDefinition[0]));
+    }
 
+    // /4 CONNECTIVITY MONITORING
+
+    private LwM2mClientObjectDefinition buildConnectivityMonitoringDefinition() {
+
+        List<LwM2mClientResourceDefinition> rscDefs = new ArrayList<LwM2mClientResourceDefinition>();
+
+        // radio signal strength
+        rscDefs.add(new SingleResourceDefinition(2, new IntegerLwM2mResource() {
+            Random random = new Random();
+
+            @Override
+            protected void handleRead(final IntegerLwM2mExchange exchange) {
+                // random value: -50 > val > -110
+                exchange.respondContent(-1 * (random.nextInt(60) + 50));
+            }
+        }, true));
+
+        return new LwM2mClientObjectDefinition(4, true, true, rscDefs.toArray(new LwM2mClientResourceDefinition[0]));
     }
 
 }
