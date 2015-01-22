@@ -8,8 +8,10 @@ import leshan.ResponseCode;
 import leshan.client.request.RegisterRequest;
 import leshan.core.node.LwM2mObjectInstance;
 import leshan.core.node.LwM2mResource;
+import leshan.core.response.ClientResponse;
 import leshan.core.response.ValueResponse;
 import leshan.server.client.Client;
+import leshan.server.request.ExecuteRequest;
 import leshan.server.request.ReadRequest;
 
 import org.junit.Test;
@@ -57,4 +59,22 @@ public class DeviceObjectTest extends BaseTest {
         assertEquals(3, resource.getId());
         assertEquals(TestClientBuilder.FIRMWARE_VERSION, resource.getValue().value);
     }
+
+    @Test
+    public void LightweightM2M_1_0_int_203_Rebooting_the_device() {
+        System.out.println("##  LightweightM2M-1.0-int-203 – Rebooting the device");
+
+        // client registration
+        client.send(new RegisterRequest(clientEndpoint, new HashMap<String, String>()));
+
+        // send reboot request
+        Client regClient = server.getClientRegistry().get(clientEndpoint);
+        ClientResponse response = server.send(new ExecuteRequest(regClient, 3, 0, 4));
+        System.out.println("Response to reboot request: " + response);
+
+        assertEquals(ResponseCode.CHANGED, response.getCode());
+
+        // TODO client re-registration?
+    }
+
 }

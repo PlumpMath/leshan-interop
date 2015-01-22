@@ -8,13 +8,18 @@ import java.util.Map;
 import java.util.Random;
 
 import leshan.client.californium.LeshanClient;
+import leshan.client.exchange.LwM2mExchange;
 import leshan.client.resource.LwM2mClientObjectDefinition;
+import leshan.client.resource.LwM2mClientResource;
 import leshan.client.resource.LwM2mClientResourceDefinition;
 import leshan.client.resource.SingleResourceDefinition;
 import leshan.client.resource.integer.IntegerLwM2mExchange;
 import leshan.client.resource.integer.IntegerLwM2mResource;
 import leshan.client.resource.string.StringLwM2mExchange;
 import leshan.client.resource.string.StringLwM2mResource;
+import leshan.client.response.ExecuteResponse;
+import leshan.client.response.ReadResponse;
+import leshan.client.response.WriteResponse;
 import leshan.server.californium.LeshanServerBuilder;
 
 import org.eclipse.californium.core.CoapServer;
@@ -149,6 +154,37 @@ public class TestClientBuilder {
             protected void handleRead(final StringLwM2mExchange exchange) {
                 exchange.respondContent(FIRMWARE_VERSION);
             }
+        }, true));
+
+        // reboot
+        rscDefs.add(new SingleResourceDefinition(4, new LwM2mClientResource() {
+
+            @Override
+            public void execute(LwM2mExchange exchange) {
+                System.out.println("Reboot request received");
+                exchange.respond(ExecuteResponse.success());
+            }
+
+            @Override
+            public void write(LwM2mExchange exchange) {
+                exchange.respond(WriteResponse.notAllowed());
+            }
+
+            @Override
+            public void read(LwM2mExchange exchange) {
+                exchange.respond(ReadResponse.notAllowed());
+            }
+
+            @Override
+            public boolean isReadable() {
+                return false;
+            }
+
+            @Override
+            public void notifyResourceUpdated() {
+                //
+            }
+
         }, true));
 
         return new LwM2mClientObjectDefinition(3, true, true, rscDefs.toArray(new LwM2mClientResourceDefinition[0]));
